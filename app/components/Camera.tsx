@@ -6,13 +6,14 @@ export default function Camera({ onCapture }: { onCapture: Function }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
   useEffect(() => {
     let stream: any = null;
 
     async function enableStream() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           setIsStreaming(true);
@@ -31,7 +32,7 @@ export default function Camera({ onCapture }: { onCapture: Function }) {
         stream.getTracks().forEach((track: any) => track.stop());
       }
     };
-  }, [isStreaming]);
+  }, [facingMode, isStreaming]);
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -49,6 +50,11 @@ export default function Camera({ onCapture }: { onCapture: Function }) {
     }
   };
 
+  const switchCamera = () => {
+    setFacingMode(prevMode => prevMode === 'user' ? 'environment' : 'user');
+    setIsStreaming(false);  // This will trigger re-initialization of the camera
+  };
+
   return (
     <div className="relative">
       <video
@@ -61,9 +67,15 @@ export default function Camera({ onCapture }: { onCapture: Function }) {
       <canvas ref={canvasRef} className="hidden" width="640" height="480" />
       <button
         onClick={capturePhoto}
-        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-2 rounded-full"
+        className="absolute bottom-4 left-1/4 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-2 rounded-full"
       >
         Capture
+      </button>
+      <button
+        onClick={switchCamera}
+        className="absolute bottom-4 right-1/4 transform translate-x-1/2 bg-gray-500 text-white px-4 py-2 rounded-full"
+      >
+        Switch Camera
       </button>
     </div>
   );
